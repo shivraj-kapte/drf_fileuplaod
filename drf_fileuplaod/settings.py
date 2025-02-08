@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/5.1/ref/settings/
 """
 
 from pathlib import Path
+from datetime import timedelta
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -37,6 +38,12 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+
+    'rest_framework',
+    'rest_framework_simplejwt',
+    'rest_framework_simplejwt.token_blacklist',  # ✅ Enable JWT token blacklisting user logout
+    'users',
+    'drf_yasg',  # ✅ Add this for Swagger
 ]
 
 MIDDLEWARE = [
@@ -73,12 +80,58 @@ WSGI_APPLICATION = 'drf_fileuplaod.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.sqlite3',
+#         'NAME': BASE_DIR / 'db.sqlite3',
+#     }
+# }
+
+
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'mssql',  # Django backend for SQL Server
+        'NAME': 'drf_fileuplaod',  # Replace with your database name
+        'HOST': r'PROTON\SQLEXPRESS',  # Example: 'localhost' or 'SERVERNAME\SQLEXPRESS'
+        # 'PORT': '1433',  # Default SQL Server port
+        'OPTIONS': {
+            'driver': 'ODBC Driver 17 for SQL Server',  # Ensure this driver is installed
+            'trusted_connection': 'yes',  # Enables Windows Authentication
+        },
     }
 }
+
+# conn_str = "Driver={ODBC Driver 17 for SQL Server};Server=PROTON\SQLEXPRESS;DATABASE=market;Trusted_Connection=yes;"
+
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework_simplejwt.authentication.JWTAuthentication',
+    ),
+}
+
+
+SWAGGER_SETTINGS = {
+    'SECURITY_DEFINITIONS': {
+        'Bearer': {
+            'type': 'apiKey',
+            'name': 'Authorization',
+            'in': 'header',
+            'description': 'Enter JWT token as: Bearer {token}'
+        }
+    },
+    'USE_SESSION_AUTH': False,  # Disable default session authentication in Swagger
+}
+
+SIMPLE_JWT = {
+    'ACCESS_TOKEN_LIFETIME': timedelta(minutes=30),  # Access token valid for 30 minutes
+    'REFRESH_TOKEN_LIFETIME': timedelta(days=7),  # Refresh token valid for 7 days
+    'ROTATE_REFRESH_TOKENS': True,  # Optional: Generates new refresh token on usage
+    'BLACKLIST_AFTER_ROTATION': True,  # Optional: Blacklist old refresh token after rotation
+    'AUTH_HEADER_TYPES': ('Bearer',),  # Use 'Bearer' prefix in Authorization header
+    "SIGNING_KEY": SECRET_KEY
+}
+
 
 
 # Password validation
